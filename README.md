@@ -1,4 +1,4 @@
-# PySparkCookbook
+# PySpark Cookbook
 ## Packt Publishing
 
 A repository for a PySpark Cookbook by Tomasz Drabas and Denny Lee (in preparation).
