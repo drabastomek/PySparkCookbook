@@ -94,9 +94,7 @@ function checkJava() {
         echo "Found Java executable in JAVA_HOME"
         _java="$JAVA_HOME/bin/java"
     else
-        echo "No Java found. Install Java version $_java_required"
-        echo "or higher first or specify JAVA_HOME"
-        echo "variable that will point to your Java binaries."
+        echo "No Java found. Install Java version $_java_required or higher first or specify JAVA_HOME variable that will point to your Java binaries."
         exit
     fi
     
