@@ -10,39 +10,28 @@
 _spark_source="http://mirrors.ocf.berkeley.edu/apache/spark/spark-2.2.0/spark-2.2.0.tgz"
 _spark_archive=$( echo "$_spark_source" | awk -F '/' '{print $NF}' )
 _spark_dir=$( echo "${_spark_archive%.*}" )
+_spark_destination="/opt/spark"
 
 # parse command line arguments
 _args_len="$#"
-_check_sudo="yes"
 
 if [ "$_args_len" -ge 0 ]; then
 
-    POSITIONAL=()
+    # POSITIONAL=()
     while [[ "$#" -gt 0 ]]
     do
         key="$1"
 
         case $key in
-            -s|--sudo)
-            _check_sudo="$2"
-            shift # past argument
-            shift # past value
+            -ns|--nosudo)
+            _spark_destination="~/spark"
+            shift
             ;;
             *)
-            POSITIONAL+=("$1") # save it in an array for later
-            shift # past argument
+            break ;;
         esac
     done
-    set -- "${POSITIONAL[@]}" # restore positional parameters
 fi
-
-case "$_check_sudo" in
-    yes*)     _spark_destination="/opt/spark";;
-    YES*)     _spark_destination="/opt/spark";;
-    no*)      _spark_destination="~/spark";;
-    NO*)      _spark_destination="~/spark";;
-    *)        _spark_destination="/opt/spark"
-esac
 
 function checkOS(){
     _uname_out="$(uname -s)"
@@ -191,11 +180,11 @@ function cleanUp() {
     rm -rf _temp
 }
 
-checkOS
-printHeader
-downloadThePackage
-unpack
-build
-moveTheBinaries
-setSparkEnvironmentVariables
-cleanUp
+# checkOS
+# printHeader
+# downloadThePackage
+# unpack
+# build
+# moveTheBinaries
+# setSparkEnvironmentVariables
+# cleanUp

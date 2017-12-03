@@ -19,33 +19,27 @@ _args_len="$#"
 
 if [ "$_args_len" -ge 0 ]; then
 
-    POSITIONAL=()
     while [[ "$#" -gt 0 ]]
     do
         key="$1"
 
         case $key in
             -m|--Maven)
-            _check_Maven_req="$2"
+            _check_Maven_req="true"
             shift # past argument
-            shift # past value
             ;;
             -r|--R)
-            _check_R_req="$2"
+            _check_R_req="true"
             shift # past argument
-            shift # past value
             ;;
             -s|--Scala)
-            _check_Scala_req="$2"
+            _check_Scala_req="true"
             shift # past argument
-            shift # past value
             ;;
             *)
-            POSITIONAL+=("$1") # save it in an array for later
-            shift # past argument
+            shift
         esac
     done
-    set -- "${POSITIONAL[@]}" # restore positional parameters
 fi
 
 function printHeader() {
