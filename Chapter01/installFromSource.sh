@@ -20,8 +20,13 @@ function checkOS(){
     case "$_uname_out" in
         Linux*)     _machine="Linux";;
         Darwin*)    _machine="Mac";;
-        *)          _machine="UNKNOWN:${unameOut}"
+        *)          _machine="UNKNOWN:${_uname_out}"
     esac
+
+    if [ "$_machine" = "UNKNOWN:${_uname_out}" ]; then
+        echo "Machine $_machine. Stopping."
+        exit
+    fi
 }
 
 function printHeader() {
