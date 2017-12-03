@@ -13,6 +13,8 @@ _r_required=3.1
 _scala_required=2.11
 _mvn_required=3.3.9
 
+
+# parse command line arguments
 _args_len="$#"
 
 if [ "$_args_len" -ge 0 ]; then
@@ -92,7 +94,9 @@ function checkJava() {
         echo "Found Java executable in JAVA_HOME"
         _java="$JAVA_HOME/bin/java"
     else
-        echo "No Java found. Install Java version $_java_required or higher first or specify JAVA_HOME variable that will point to your Java binaries."
+        echo "No Java found. Install Java version $_java_required"
+        echo "or higher first or specify JAVA_HOME"
+        echo "variable that will point to your Java binaries."
         exit
     fi
     
