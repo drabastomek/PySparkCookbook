@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Shell script for checking the dependencies 
+# Shell script for checking the Spark dependencies 
 #
 # PySpark Cookbook
 # Author: Tomasz Drabas, Denny Lee
