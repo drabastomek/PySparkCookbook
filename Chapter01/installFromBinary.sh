@@ -136,7 +136,9 @@ function setSparkEnvironmentVariables() {
     _today=$( date +%Y-%m-%d )
 
     # make a copy just in case
-    cp "$_bash" "$_bash.spark_copy"
+    if ! [ -f "$_bash.spark_copy" ]; then
+        cp "$_bash" "$_bash.spark_copy"
+    fi
 
     echo >> $_bash
     echo "###################################################" >> $_bash
