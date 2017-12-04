@@ -17,7 +17,6 @@ _args_len="$#"
 
 if [ "$_args_len" -ge 0 ]; then
 
-    # POSITIONAL=()
     while [[ "$#" -gt 0 ]]
     do
         key="$1"
@@ -177,6 +176,7 @@ function setSparkEnvironmentVariables() {
 
 # Clean up
 function cleanUp() {
+    cd ..
     rm -rf _temp
 }
 
