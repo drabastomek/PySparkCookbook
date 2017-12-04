@@ -117,7 +117,7 @@ function build(){
     echo
 
     cd "$_spark_dir"
-    ./dev/make-distribution.sh --name custom-spark --pip  --tgz -Phadoop-2.7 -Phive -Phive-thriftserver -Pyarn
+    ./dev/make-distribution.sh --name pyspark-cookbook -Phadoop-2.7 -Phive -Phive-thriftserver -Pyarn
 
     echo
 }
@@ -170,7 +170,7 @@ function setSparkEnvironmentVariables() {
     echo "export PYSPARK_PYTHON=$(type -p python)" >> $_bash
     echo "export PYSPARK_DRIVER_PYTHON=jupyter" >> $_bash
 
-    echo "export PYSPARK_DRIVER_PYTHON_OPTS=\"notebook --NotebookApp.open_browser=False --NotebookApp.ip='*' --NotebookApp.port=8880\"" >> $_bash
+    echo "export PYSPARK_DRIVER_PYTHON_OPTS=\"notebook --NotebookApp.open_browser=False --NotebookApp.port=6661\"" >> $_bash
     
     echo "export PATH=$SPARK_HOME/bin:\$PATH" >> $_bash
 }
@@ -180,11 +180,11 @@ function cleanUp() {
     rm -rf _temp
 }
 
-# checkOS
-# printHeader
-# downloadThePackage
-# unpack
-# build
-# moveTheBinaries
-# setSparkEnvironmentVariables
-# cleanUp
+checkOS
+printHeader
+downloadThePackage
+unpack
+build
+moveTheBinaries
+setSparkEnvironmentVariables
+cleanUp
