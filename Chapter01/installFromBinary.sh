@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Shell script for installing Spark from sources 
+# Shell script for installing Spark from binaries 
 #
 # PySpark Cookbook
 # Author: Tomasz Drabas, Denny Lee
