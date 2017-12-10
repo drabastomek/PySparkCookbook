@@ -11,42 +11,80 @@
 _spark_binary="http://mirrors.ocf.berkeley.edu/apache/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz"
 _spark_archive=$( echo "$_spark_binary" | awk -F '/' '{print $NF}' )
 _spark_dir=$( echo "${_spark_archive%.*}" )
-_spark_destination="/opt/spark"
+_spark_destination="/usr/local/spark"
 
-# parse command line arguments
-_args_len="$#"
-
-if [ "$_args_len" -ge 0 ]; then
-
-    while [[ "$#" -gt 0 ]]
-    do
-        key="$1"
-
-        case $key in
-            -ns|--nosudo)
-            _spark_destination="~/spark"
-            shift
-            ;;
-            *)
-            break ;;
-        esac
-    done
-fi
+_machine=$(cat /etc/hostname)
 
 function printHeader() {
     echo
     echo "####################################################"
     echo
-    echo "Installing Spark 2.2.0 from binaries on $_machine"
+    echo "Installing Spark from binaries on:"
+    echo "                             $_machine"
     echo
-    echo "The binaries will be moved to $_spark_destination"
+    echo "Spark binaries will be moved to:"
+    echo "                             $_spark_destination"
     echo
     echo "PySpark Cookbook by Tomasz Drabas and Denny Lee"
-    echo "Version: 0.1, 12/3/2017"
+    echo "Version: 0.1, 12/9/2017"
     echo
     echo "####################################################"
     echo
     echo
+}
+
+function readIPs() {
+    input="./hosts.txt"
+
+    declare -a _slaves
+
+    i=0
+    master=0
+    slaves=0
+
+    while IFS= read line
+    do
+
+        if [[ "$master" = "1" ]]; then
+            _masterNode="$line"
+            # echo "$line"
+            master=0
+        fi
+
+        if [[ "$slaves" = "1" ]]; then
+            _slaves[i]="$line"
+            # echo "$line"
+            ((i++))
+        fi
+
+        if [[ "$line" = "master:" ]]; then
+            master=1
+        fi
+
+        if [[ "$line" = "slaves:" ]]; then
+            slaves=1
+        fi
+
+        if [[ -z "${line}" ]]; then
+            continue
+        fi
+
+        
+         #(${line// / })
+        # slaveNodes[i]=(${line// / })
+    done < "$input"
+
+    echo $_masterNode
+    echo ${_slaves[@]}
+    # echo ${slaveNodes[*]}
+
+    # MATCH="s"
+
+    # if echo $WORD_LIST | grep -w $MATCH > /dev/null; then
+    #     echo "matched"
+    # else
+    #     echo "notmatched"
+    # fi
 }
 
 # Download the package
@@ -64,16 +102,8 @@ function downloadThePackage() {
 
     mkdir _temp
     cd _temp
-
-    if [ "$_machine" = "Mac" ]; then
-        curl -O $_spark_binary
-    elif [ "$_machine" = "Linux"]; then
-        wget $_spark_binary
-    else
-        echo "System: $_machine not supported."
-        exit
-    fi
-
+    wget $_spark_binary
+    
     echo
 }
 
@@ -150,6 +180,7 @@ function cleanUp() {
 }
 
 printHeader
+readIPs
 # downloadThePackage
 # unpack
 # moveTheBinaries
