@@ -14,6 +14,7 @@ _spark_dir=$( echo "${_spark_archive%.*}" )
 _spark_destination="/usr/local/spark"
 
 _machine=$(cat /etc/hostname)
+_today=$( date +%Y-%m-%d )
 
 function printHeader() {
     echo
@@ -34,57 +35,114 @@ function printHeader() {
 }
 
 function readIPs() {
+    echo
+    echo "##########################"
+    echo
+    echo "Reading the hosts.txt list"
+    echo
+    
     input="./hosts.txt"
 
-    declare -a _slaves
 
-    i=0
+    # i=0
     master=0
     slaves=0
+    _slaves=""
 
-    while IFS= read line
+    IFS=''
+    while read line
     do
 
         if [[ "$master" = "1" ]]; then
             _masterNode="$line"
-            # echo "$line"
             master=0
         fi
 
         if [[ "$slaves" = "1" ]]; then
-            _slaves[i]="$line"
-            # echo "$line"
-            ((i++))
+            _slaves=$_slaves"$line\n"
         fi
 
         if [[ "$line" = "master:" ]]; then
             master=1
+            slaves=0
         fi
 
         if [[ "$line" = "slaves:" ]]; then
             slaves=1
+            master=0
         fi
 
         if [[ -z "${line}" ]]; then
             continue
         fi
-
-        
-         #(${line// / })
-        # slaveNodes[i]=(${line// / })
     done < "$input"
+}
 
-    echo $_masterNode
-    echo ${_slaves[@]}
-    # echo ${slaveNodes[*]}
+function updateHosts() {
+    echo
+    echo "##########################"
+    echo
+    echo "Updating the /etc/hosts"
+    echo
 
-    # MATCH="s"
+    _hostsFile="/etc/hosts"
 
-    # if echo $WORD_LIST | grep -w $MATCH > /dev/null; then
-    #     echo "matched"
-    # else
-    #     echo "notmatched"
-    # fi
+    # make a copy (if one already doesn't exist)
+    if ! [ -f "/etc/hosts.old" ]; then
+        sudo cp "$_hostsFile" /etc/hosts.old
+    fi
+
+    t="###################################################\n"
+    t=$t"#\n"
+    t=$t"# IPs of the Spark cluster machines\n"
+    t=$t"#\n"
+    t=$t"# Script: installOnRemote.sh\n"
+    t=$t"# Added on: $_today\n"
+    t=$t"#\n"
+    t=$t"$_masterNode\n"
+    t=$t"$_slaves\n"
+
+    sudo printf "$t" >> $_hostsFile
+
+}
+
+function configureSSH() {
+    # # install the Open SSH
+    sudo apt-get install openssh-server openssh-client
+
+    # check if master
+    IFS=" "
+    read -ra temp <<< "$_masterNode"
+    _current=( ${temp[1]} )
+
+    if [ "$_current" = "$_machine" ]; then
+        # generate key pairs (passwordless)
+        ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+
+        # loop through all the slaves
+        read -ra temp <<< "$_slaves"
+        for slave in ${temp[@]}; do 
+            # skip if empty line
+            if [[ -z "${slave}" ]]; then
+                continue
+            fi
+            
+            # split on space
+            IFS=" "
+            read -ra temp_inner <<< "$slave"
+
+            # ssh to the remote node from master
+            # create .ssh directory
+            # and output the public key to authorized_keys
+            # file inside .ssh
+            cat ~/.ssh/id_rsa.pub | ssh "$USER"@"${temp_inner[1]}" 'mkdir -p .ssh && cat >> .ssh/authorized_keys'
+
+            # alter permissions for the .ssh folder and 
+            # for the authorized_keys file
+            ssh "$USER"@"${temp_inner[1]}" "chmod 0700 .ssh; chmod 0640 .ssh/authorized_keys"
+        done
+
+    fi
 }
 
 # Download the package
@@ -148,7 +206,6 @@ function setSparkEnvironmentVariables() {
     else
         _bash=~/.bashrc
     fi
-    _today=$( date +%Y-%m-%d )
 
     # make a copy just in case
     if ! [ -f "$_bash.spark_copy" ]; then
@@ -181,6 +238,8 @@ function cleanUp() {
 
 printHeader
 readIPs
+# updateHosts
+configureSSH
 # downloadThePackage
 # unpack
 # moveTheBinaries
