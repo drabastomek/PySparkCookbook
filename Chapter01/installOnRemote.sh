@@ -14,6 +14,10 @@ _spark_dir=$( echo "${_spark_archive%.*}" )
 _spark_destination="/usr/local/spark"
 _java_destination="/usr/lib/jvm/java-8-oracle"
 
+_python_binary="https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh"
+_python_archive=$( echo "$_python_binary" | awk -F '/' '{print $NF}' )
+_python_destination="/usr/local/python"
+
 _machine=$(cat /etc/hostname)
 _today=$( date +%Y-%m-%d )
 
@@ -46,33 +50,30 @@ function readIPs() {
     
     input="./hosts.txt"
 
-
-    # i=0
-    master=0
-    slaves=0
-    _slaves=""
+    driver=0
+    executors=0
+    _executors=""
 
     IFS=''
     while read line
     do
-
-        if [[ "$master" = "1" ]]; then
-            _masterNode="$line"
-            master=0
+        if [[ "$driver" = "1" ]]; then
+            _driverNode="$line"
+            driver=0
         fi
 
-        if [[ "$slaves" = "1" ]]; then
-            _slaves=$_slaves"$line\n"
+        if [[ "$executors" = "1" ]]; then
+            _executors=$_executors"$line\n"
         fi
 
-        if [[ "$line" = "master:" ]]; then
-            master=1
-            slaves=0
+        if [[ "$line" = "driver:" ]]; then
+            driver=1
+            executors=0
         fi
 
-        if [[ "$line" = "slaves:" ]]; then
-            slaves=1
-            master=0
+        if [[ "$line" = "executors:" ]]; then
+            executors=1
+            driver=0
         fi
 
         if [[ -z "${line}" ]]; then
@@ -121,6 +122,12 @@ function installScala() {
     sudo apt-get install scala
 }
 
+function installPython() {
+    curl -O "$_python_binary"
+    chmod 0755 ./"$_python_archive"
+    sudo bash ./"$_python_archive" -b -u -p "$_python_destination"
+}
+
 function updateHosts() {
     echo
     echo "##########################"
@@ -142,8 +149,8 @@ function updateHosts() {
     t=$t"# Script: installOnRemote.sh\n"
     t=$t"# Added on: $_today\n"
     t=$t"#\n"
-    t=$t"$_masterNode\n"
-    t=$t"$_slaves\n"
+    t=$t"$_driverNode\n"
+    t=$t"$_executors\n"
 
     sudo printf "$t" >> $_hostsFile
 
@@ -155,32 +162,30 @@ function configureSSH() {
     echo
     echo "Configuring SSH connections "
     echo
-    # # install the Open SSH
-    # sudo apt-get install openssh-server openssh-client
 
-    # check if master
+    # check if driver node
     IFS=" "
-    read -ra temp <<< "$_masterNode"
-    _current=( ${temp[1]} )
-    _all_machines="$_current\n"
+    read -ra temp <<< "$_driverNode"
+    _driver_machine=( ${temp[1]} )
+    _all_machines="$_driver_machine\n"
 
-    if [ "$_current" = "$_machine" ]; then
+    if [ "$_driver_machine" = "$_machine" ]; then
         # generate key pairs (passwordless)
-        sudo -u hduser rm -f ~/.ssh/id_rsa && sudo -u hduser ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
-        # echo -e 'y\n' | ssh-keygen -q -t rsa -P "" -f ~/.ssh/id_rsa
+        sudo -u hduser rm -f ~/.ssh/id_rsa
+        sudo -u hduser ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
 
         IFS="\n"
-        # loop through all the slaves
-        read -ra temp <<< "$_slaves"
-        for slave in ${temp[@]}; do 
+        # loop through all the executors
+        read -ra temp <<< "$_executors"
+        for executor in ${temp[@]}; do 
             # skip if empty line
-            if [[ -z "${slave}" ]]; then
+            if [[ -z "${executor}" ]]; then
                 continue
             fi
             
             # split on space
             IFS=" "
-            read -ra temp_inner <<< "$slave"
+            read -ra temp_inner <<< "$executor"
             echo
             echo "Trying to connect to ${temp_inner[1]}"
 
@@ -190,7 +195,7 @@ function configureSSH() {
             # file inside .ssh
             cat ~/.ssh/id_rsa.pub | ssh "hduser"@"${temp_inner[1]}" 'mkdir -p .ssh && cat >> .ssh/authorized_keys'
 
-            # append the slave name to the _all_machines
+            # append the executor name to the _all_machines
             # (we'll need it later)
             _all_machines=$_all_machines"${temp_inner[1]}\n"
         done
@@ -273,8 +278,9 @@ function setSparkEnvironmentVariables() {
 
     echo "export SPARK_HOME=$_spark_destination" >> $_bash
     echo "export JAVA_HOME=$_java_destination" >> $_bash
+    echo "export PYSPARK_PYTHON=$_python_destination/bin/python"
     
-    echo "export PATH=$SPARK_HOME/bin:\$PATH" >> $_bash
+    echo "export PATH=\$SPARK_HOME/bin:\$SPARK_HOME/sbin:$_python_destination\bin:\$PATH" >> $_bash
 }
 
 function updateSparkConfig() {
@@ -304,6 +310,7 @@ printHeader
 readIPs
 checkJava
 installScala
+installPython
 updateHosts
 configureSSH
 downloadThePackage
