@@ -1,6 +1,6 @@
-master:
+driver:
 192.168.1.160  pathfinder
 
-slaves:
+executors:
 192.168.1.161  discovery1
 192.168.1.162  discovery2
