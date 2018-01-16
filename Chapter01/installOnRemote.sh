@@ -11,12 +11,12 @@
 _spark_binary="http://mirrors.ocf.berkeley.edu/apache/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz"
 _spark_archive=$( echo "$_spark_binary" | awk -F '/' '{print $NF}' )
 _spark_dir=$( echo "${_spark_archive%.*}" )
-_spark_destination="/usr/local/spark"
+_spark_destination="/opt/spark"
 _java_destination="/usr/lib/jvm/java-8-oracle"
 
 _python_binary="https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh"
 _python_archive=$( echo "$_python_binary" | awk -F '/' '{print $NF}' )
-_python_destination="/usr/local/python"
+_python_destination="/opt/python"
 
 _machine=$(cat /etc/hostname)
 _today=$( date +%Y-%m-%d )

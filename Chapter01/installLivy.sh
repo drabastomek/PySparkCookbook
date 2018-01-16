@@ -261,6 +261,10 @@ createTempDir
 downloadThePackage $( echo "${_livy_binary}" )
 unpack $( echo "${_livy_archive}" )
 moveTheBinaries $( echo "${_livy_dir}" ) $( echo "${_livy_destination}" )
+
+# create log directory inside the folder
+mkdir -p "$_livy_destination/logs"
+
 checkHadoop
 installJupyterKernels
 setSparkEnvironmentVariables
